@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import type { Notification } from '@/types';
@@ -7,9 +8,18 @@ export const useNotifications = () => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const channelRef = useRef<RealtimeChannel | null>(null);
 
   useEffect(() => {
     if (!user) return;
+
+    // Tear down any existing subscription before creating a new one.
+    // Supabase channels are singletons by name — calling .on() on an
+    // already-subscribed channel throws, so we must remove it first.
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
 
     supabase
       .from('notifications')
@@ -22,7 +32,7 @@ export const useNotifications = () => {
         setLoading(false);
       });
 
-    const channel = supabase
+    channelRef.current = supabase
       .channel(`notifications:${user.id}`)
       .on(
         'postgres_changes',
@@ -33,7 +43,12 @@ export const useNotifications = () => {
       )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
   }, [user]);
 
   const markRead = async (id: string) => {

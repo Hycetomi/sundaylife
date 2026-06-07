@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { CheckSquare, Inbox, BookOpen, Home, LogOut, X, Church, ShieldCheck } from 'lucide-react';
+import { CheckSquare, Inbox, BookOpen, Home, LogOut, X, Church, ShieldCheck, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
@@ -13,11 +13,12 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'My Tasks', href: '/dashboard', Icon: CheckSquare, minRole: 'Volunteer' },
-  { label: 'Triage', href: '/dashboard/triage', Icon: Inbox, minRole: 'Lead' },
-  { label: 'Lifehouse', href: '/dashboard/lifehouse', Icon: Church, minRole: 'Lead' },
-  { label: 'Knowledge Base', href: '/dashboard/spaces', Icon: BookOpen, minRole: 'Volunteer' },
-  { label: 'Admin', href: '/dashboard/admin', Icon: ShieldCheck, minRole: 'Admin' },
+  { label: 'My Tasks',      href: '/dashboard',            Icon: CheckSquare, minRole: 'Volunteer' },
+  { label: 'Triage',        href: '/dashboard/triage',     Icon: Inbox,       minRole: 'Lead'      },
+  { label: 'Volunteers',    href: '/dashboard/volunteers', Icon: Users,       minRole: 'Lead'      },
+  { label: 'Lifehouse',     href: '/dashboard/lifehouse',  Icon: Church,      minRole: 'Lead'      },
+  { label: 'Knowledge Base',href: '/dashboard/spaces',     Icon: BookOpen,    minRole: 'Volunteer' },
+  { label: 'Admin',         href: '/dashboard/admin',      Icon: ShieldCheck, minRole: 'Admin'     },
 ];
 
 const ROLE_LEVEL: Record<Role, number> = { Volunteer: 0, Lead: 1, Admin: 2 };

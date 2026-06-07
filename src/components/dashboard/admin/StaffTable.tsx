@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Check, AlertCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/components/ui';
 import type { Department, Profile, Role } from '@/types';
 
 type Row = Profile & { departments: { name: string } | null };
@@ -10,11 +10,10 @@ const ROLES: Role[] = ['Volunteer', 'Lead', 'Admin'];
 
 const StaffTable = () => {
   const { user } = useAuth();
+  const toast = useToast();
   const [staff, setStaff] = useState<Row[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saved, setSaved] = useState<string | null>(null);
-  const [errored, setErrored] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -27,28 +26,16 @@ const StaffTable = () => {
     });
   }, []);
 
-  const flash = (id: string) => {
-    setSaved(id);
-    setTimeout(() => setSaved(null), 2000);
-  };
-
-  const flashError = (id: string) => {
-    setErrored(id);
-    setTimeout(() => setErrored(null), 3000);
-  };
-
   const updateRole = async (profileId: string, role: Role) => {
     if (profileId === user?.id && role !== 'Admin') return;
     const prev = staff.find(p => p.id === profileId)?.role;
-    // Optimistic update
     setStaff(s => s.map(p => p.id === profileId ? { ...p, role } : p));
     const { error } = await supabase.from('profiles').update({ role }).eq('id', profileId);
     if (error) {
-      // Revert on failure
       setStaff(s => s.map(p => p.id === profileId ? { ...p, role: prev! } : p));
-      flashError(profileId);
+      toast.error('Failed to update role', 'Check your permissions.');
     } else {
-      flash(profileId);
+      toast.success('Role updated');
     }
   };
 
@@ -56,17 +43,15 @@ const StaffTable = () => {
     const val = departmentId === '' ? null : departmentId;
     const prevRow = staff.find(p => p.id === profileId);
     const dept = departments.find(d => d.id === departmentId) ?? null;
-    // Optimistic update
     setStaff(s => s.map(p =>
       p.id === profileId ? { ...p, department_id: val, departments: dept ? { name: dept.name } : null } : p
     ));
     const { error } = await supabase.from('profiles').update({ department_id: val }).eq('id', profileId);
     if (error) {
-      // Revert on failure
       setStaff(s => s.map(p => p.id === profileId ? { ...prevRow!, ...p } : p));
-      flashError(profileId);
+      toast.error('Failed to update department', 'Check your permissions.');
     } else {
-      flash(profileId);
+      toast.success('Department updated');
     }
   };
 
@@ -85,15 +70,14 @@ const StaffTable = () => {
           <tr className="border-b border-white/10">
             <th className="text-left font-cabinet font-bold text-xs uppercase tracking-wider text-pink-swirl/40 pb-3 pr-6">Name</th>
             <th className="text-left font-cabinet font-bold text-xs uppercase tracking-wider text-pink-swirl/40 pb-3 pr-6">Role</th>
-            <th className="text-left font-cabinet font-bold text-xs uppercase tracking-wider text-pink-swirl/40 pb-3 pr-6">Department</th>
-            <th className="pb-3 w-8" />
+            <th className="text-left font-cabinet font-bold text-xs uppercase tracking-wider text-pink-swirl/40 pb-3">Department</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-white/5">
           {staff.map(person => {
             const isMe = person.id === user?.id;
             return (
-              <tr key={person.id} className="group">
+              <tr key={person.id}>
                 <td className="py-3 pr-6">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-waxy-corn/20 flex items-center justify-center flex-shrink-0">
@@ -121,7 +105,7 @@ const StaffTable = () => {
                   </select>
                 </td>
 
-                <td className="py-3 pr-6">
+                <td className="py-3">
                   <select
                     value={person.department_id ?? ''}
                     onChange={e => updateDepartment(person.id, e.target.value)}
@@ -132,15 +116,6 @@ const StaffTable = () => {
                       <option key={d.id} value={d.id} className="bg-bitter-liquorice">{d.name}</option>
                     ))}
                   </select>
-                </td>
-
-                <td className="py-3 w-8">
-                  {saved === person.id && <Check size={14} className="text-fluorescence" />}
-                  {errored === person.id && (
-                    <span title="Save failed — check permissions">
-                      <AlertCircle size={14} className="text-hot-red" />
-                    </span>
-                  )}
                 </td>
               </tr>
             );

@@ -21,7 +21,7 @@ interface Props {
 const TopBar = ({ onMenuClick }: Props) => {
   const { pathname } = useLocation();
   const { profile } = useAuth();
-  const { unreadCount } = useNotifications();
+  const { notifications, loading, markRead, markAllRead, unreadCount } = useNotifications();
   const [panelOpen, setPanelOpen] = useState(false);
 
   const title = PAGE_TITLES[pathname] ?? 'Dashboard';
@@ -62,7 +62,13 @@ const TopBar = ({ onMenuClick }: Props) => {
 
           <AnimatePresence>
             {panelOpen && (
-              <NotificationPanel onClose={() => setPanelOpen(false)} />
+              <NotificationPanel
+                onClose={() => setPanelOpen(false)}
+                notifications={notifications}
+                loading={loading}
+                markRead={markRead}
+                markAllRead={markAllRead}
+              />
             )}
           </AnimatePresence>
         </div>

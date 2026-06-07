@@ -3,9 +3,25 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 
+const NavLogo = () => {
+  const [err, setErr] = useState(false);
+  return err ? (
+    <span className="font-cabinet font-black text-xl uppercase tracking-tight text-pink-swirl">
+      SundayLife
+    </span>
+  ) : (
+    <img
+      src="/logo.png"
+      alt="SundayLife"
+      className="h-9 w-auto object-contain"
+      onError={() => setErr(true)}
+    />
+  );
+};
+
 const NAV_LINKS = [
   { label: 'About', href: '/#about' },
-  { label: 'Blog Pulse', href: '/#blog-pulse' },
+  { label: 'Blog Pulse', href: '/blog-pulse' },
   { label: 'Support Us', href: '/#support-us' },
   { label: 'Join a Lifehouse', href: '/join-a-lifehouse' },
 ];
@@ -32,9 +48,9 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-8 py-5 bg-bitter-liquorice/90 backdrop-blur-md text-pink-swirl border-b border-white/10">
       {/* Logo */}
-      <div className="text-2xl font-cabinet font-bold tracking-wider uppercase z-10">
-        <Link to="/">SundayLife</Link>
-      </div>
+      <Link to="/" className="z-10 flex-shrink-0">
+        <NavLogo />
+      </Link>
 
       {/* Desktop nav */}
       <ul className="hidden md:flex items-center space-x-8 font-general text-sm font-medium">

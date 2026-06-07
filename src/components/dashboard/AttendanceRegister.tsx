@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckSquare, Square, Send, Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { Button, useToast } from '@/components/ui';
 import type { Lifehouse, Member } from '@/types';
 
 interface Props {
@@ -9,11 +10,11 @@ interface Props {
 }
 
 const AttendanceRegister = ({ lifehouse }: Props) => {
+  const toast = useToast();
   const [members, setMembers] = useState<Member[]>([]);
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -47,11 +48,16 @@ const AttendanceRegister = ({ lifehouse }: Props) => {
       lifehouse_id: lifehouse.id,
       meeting_date: today,
     }));
-    // upsert ignores duplicates via UNIQUE(member_id, meeting_date)
-    await supabase.from('attendance_logs').upsert(rows, { onConflict: 'member_id,meeting_date' });
-    setSaved(true);
+    const { error } = await supabase
+      .from('attendance_logs')
+      .upsert(rows, { onConflict: 'member_id,meeting_date' });
     setSaving(false);
-    setTimeout(() => setSaved(false), 3000);
+    if (error) {
+      toast.error('Failed to log attendance', 'Check your permissions and try again.');
+    } else {
+      toast.success(`Attendance logged for ${checked.size} member${checked.size !== 1 ? 's' : ''}`);
+      setChecked(new Set());
+    }
   };
 
   return (
@@ -70,15 +76,15 @@ const AttendanceRegister = ({ lifehouse }: Props) => {
           >
             {checked.size === members.length ? 'Deselect all' : 'Select all'}
           </button>
-          <motion.button
+          <Button
+            icon={<Send size={14} />}
+            size="sm"
+            loading={saving}
+            disabled={checked.size === 0}
             onClick={handleSubmit}
-            disabled={checked.size === 0 || saving}
-            whileHover={{ scale: checked.size > 0 ? 1.02 : 1 }}
-            className="flex items-center gap-2 px-4 py-2 bg-waxy-corn text-bitter-liquorice font-cabinet font-bold text-sm rounded-xl disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-[0_0_14px_rgba(247,181,0,0.35)] transition-all"
           >
-            <Send size={14} />
-            {saving ? 'Saving…' : saved ? 'Saved ✓' : `Log ${checked.size > 0 ? `(${checked.size})` : ''}`}
-          </motion.button>
+            Log {checked.size > 0 ? `(${checked.size})` : ''}
+          </Button>
         </div>
       </div>
 

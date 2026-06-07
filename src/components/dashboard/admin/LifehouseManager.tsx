@@ -3,9 +3,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, MapPin, Clock, User, ChevronDown } from 'lucide-react';
+import { MapPin, Clock, User, ChevronDown } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { cn } from '@/lib/utils';
+import { Button, Input, SelectField, useToast } from '@/components/ui';
 import type { Lifehouse, Profile } from '@/types';
 
 type LifehouseRow = Lifehouse & { profiles: { full_name: string } | null };
@@ -19,6 +19,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 const LifehouseManager = () => {
+  const toast = useToast();
   const [lifehouses, setLifehouses] = useState<LifehouseRow[]>([]);
   const [leads, setLeads] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,15 +45,20 @@ const LifehouseManager = () => {
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
   const onCreate = async (data: FormValues) => {
-    await supabase.from('lifehouses').insert([{
+    const { error } = await supabase.from('lifehouses').insert([{
       name:         data.name,
       location:     data.location || null,
       meeting_time: data.meeting_time || null,
       lead_user_id: data.lead_user_id || null,
     }]);
-    reset();
-    setShowForm(false);
-    fetchData();
+    if (error) {
+      toast.error('Failed to create Lifehouse', 'Check your permissions.');
+    } else {
+      toast.success('Lifehouse created');
+      reset();
+      setShowForm(false);
+      fetchData();
+    }
   };
 
   const assignLead = async (lifehouseId: string) => {
@@ -60,7 +66,6 @@ const LifehouseManager = () => {
       .from('lifehouses')
       .update({ lead_user_id: assignValue || null })
       .eq('id', lifehouseId);
-    // Also promote the user to Lead role if they're a Volunteer
     if (assignValue) {
       await supabase
         .from('profiles')
@@ -68,6 +73,7 @@ const LifehouseManager = () => {
         .eq('id', assignValue)
         .eq('role', 'Volunteer');
     }
+    toast.success('Lead updated');
     setAssigningId(null);
     setAssignValue('');
     fetchData();
@@ -83,18 +89,15 @@ const LifehouseManager = () => {
 
   return (
     <div className="space-y-4">
-      {/* Create button */}
       <div className="flex justify-end">
-        <button
+        <Button
+          icon={<span className="text-base leading-none">+</span>}
           onClick={() => setShowForm(v => !v)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-waxy-corn text-bitter-liquorice font-cabinet font-bold text-sm rounded-xl hover:shadow-[0_0_14px_rgba(247,181,0,0.35)] transition-all"
         >
-          <Plus size={15} />
           New Lifehouse
-        </button>
+        </Button>
       </div>
 
-      {/* Create form */}
       <AnimatePresence>
         {showForm && (
           <motion.form
@@ -106,77 +109,46 @@ const LifehouseManager = () => {
             className="overflow-hidden"
           >
             <div className="bg-white/5 border border-white/10 rounded-2xl p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="font-cabinet font-bold text-xs uppercase tracking-wider text-pink-swirl/50">
-                  Name <span className="text-hot-red">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Westlands Lifehouse"
-                  {...register('name')}
-                  className={cn(
-                    'bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-pink-swirl font-general text-sm outline-none focus:border-waxy-corn/50 placeholder:text-pink-swirl/20 transition-colors',
-                    errors.name && 'border-hot-red/50'
-                  )}
-                />
-                {errors.name && <p className="font-general text-xs text-hot-red">{errors.name.message}</p>}
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="font-cabinet font-bold text-xs uppercase tracking-wider text-pink-swirl/50">Location</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Westlands, Nairobi"
-                  {...register('location')}
-                  className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-pink-swirl font-general text-sm outline-none focus:border-waxy-corn/50 placeholder:text-pink-swirl/20 transition-colors"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="font-cabinet font-bold text-xs uppercase tracking-wider text-pink-swirl/50">Meeting Time</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Sundays 4:00 PM"
-                  {...register('meeting_time')}
-                  className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-pink-swirl font-general text-sm outline-none focus:border-waxy-corn/50 placeholder:text-pink-swirl/20 transition-colors"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="font-cabinet font-bold text-xs uppercase tracking-wider text-pink-swirl/50">Assign Lead</label>
-                <select
-                  {...register('lead_user_id')}
-                  className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-pink-swirl font-general text-sm outline-none focus:border-waxy-corn/50 transition-colors bg-[#1c3828]"
-                >
-                  <option value="" className="bg-bitter-liquorice">No lead yet</option>
-                  {leads.map(l => (
-                    <option key={l.id} value={l.id} className="bg-bitter-liquorice">{l.full_name}</option>
-                  ))}
-                </select>
-              </div>
+              <Input
+                label="Name"
+                required
+                type="text"
+                placeholder="e.g. Westlands Lifehouse"
+                error={errors.name?.message}
+                {...register('name')}
+              />
+              <Input
+                label="Location"
+                type="text"
+                placeholder="e.g. Westlands, Nairobi"
+                {...register('location')}
+              />
+              <Input
+                label="Meeting Time"
+                type="text"
+                placeholder="e.g. Sundays 4:00 PM"
+                {...register('meeting_time')}
+              />
+              <SelectField
+                label="Assign Lead"
+                placeholder="No lead yet"
+                options={leads.map(l => ({ value: l.id, label: l.full_name }))}
+                {...register('lead_user_id')}
+              />
 
               <div className="sm:col-span-2 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="flex-1 py-2.5 rounded-xl border border-white/10 text-pink-swirl/60 font-general text-sm hover:bg-white/5 transition-colors"
-                >
+                <Button variant="secondary" className="flex-1" type="button" onClick={() => setShowForm(false)}>
                   Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex-1 py-2.5 rounded-xl bg-waxy-corn text-bitter-liquorice font-cabinet font-bold text-sm disabled:opacity-50 hover:shadow-[0_0_14px_rgba(247,181,0,0.35)] transition-all"
-                >
-                  {isSubmitting ? 'Creating…' : 'Create Lifehouse'}
-                </button>
+                </Button>
+                <Button className="flex-1" type="submit" loading={isSubmitting}>
+                  Create Lifehouse
+                </Button>
               </div>
             </div>
           </motion.form>
         )}
       </AnimatePresence>
 
-      {/* Lifehouse cards */}
       {lifehouses.length === 0 && (
         <p className="font-general text-sm text-pink-swirl/30 text-center py-10">
           No Lifehouses yet. Create one above.
@@ -209,31 +181,23 @@ const LifehouseManager = () => {
               </div>
             </div>
 
-            {/* Inline lead assignment */}
             {assigningId === lh.id ? (
               <div className="flex gap-2">
-                <select
+                <SelectField
+                  placeholder="Remove lead"
                   value={assignValue}
                   onChange={e => setAssignValue(e.target.value)}
-                  className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-pink-swirl font-general text-xs outline-none focus:border-waxy-corn/50 bg-[#1c3828]"
-                >
-                  <option value="" className="bg-bitter-liquorice">Remove lead</option>
-                  {leads.map(l => (
-                    <option key={l.id} value={l.id} className="bg-bitter-liquorice">{l.full_name}</option>
-                  ))}
-                </select>
-                <button
-                  onClick={() => assignLead(lh.id)}
-                  className="px-3 py-1.5 bg-waxy-corn text-bitter-liquorice font-cabinet font-bold text-xs rounded-lg"
-                >
-                  Save
-                </button>
-                <button
+                  options={leads.map(l => ({ value: l.id, label: l.full_name }))}
+                  className="flex-1 text-xs py-1.5"
+                />
+                <Button size="sm" onClick={() => assignLead(lh.id)}>Save</Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
                   onClick={() => { setAssigningId(null); setAssignValue(''); }}
-                  className="px-3 py-1.5 border border-white/10 text-pink-swirl/50 font-general text-xs rounded-lg hover:bg-white/5"
                 >
                   ✕
-                </button>
+                </Button>
               </div>
             ) : (
               <button

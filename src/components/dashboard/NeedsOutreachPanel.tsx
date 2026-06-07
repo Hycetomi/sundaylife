@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Phone, Copy, HeartHandshake } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { useToast } from '@/components/ui';
 import type { Lifehouse, RetentionAlert } from '@/types';
 
 interface Props {
@@ -9,9 +10,9 @@ interface Props {
 }
 
 const NeedsOutreachPanel = ({ lifehouse }: Props) => {
+  const toast = useToast();
   const [alerts, setAlerts] = useState<RetentionAlert[]>([]);
   const [loading, setLoading] = useState(true);
-  const [copied, setCopied] = useState<string | null>(null);
 
   useEffect(() => {
     supabase
@@ -24,10 +25,9 @@ const NeedsOutreachPanel = ({ lifehouse }: Props) => {
       });
   }, [lifehouse.id]);
 
-  const copyPhone = (phone: string, id: string) => {
+  const copyPhone = (phone: string) => {
     navigator.clipboard.writeText(phone);
-    setCopied(id);
-    setTimeout(() => setCopied(null), 2000);
+    toast.success('Phone number copied');
   };
 
   return (
@@ -79,14 +79,11 @@ const NeedsOutreachPanel = ({ lifehouse }: Props) => {
                     <Phone size={15} />
                   </a>
                   <button
-                    onClick={() => copyPhone(alert.phone!, alert.id)}
+                    onClick={() => copyPhone(alert.phone!)}
                     className="text-pink-swirl/40 hover:text-waxy-corn transition-colors"
                     title="Copy number"
                   >
-                    {copied === alert.id
-                      ? <span className="font-general text-[10px] text-fluorescence">Copied!</span>
-                      : <Copy size={14} />
-                    }
+                    <Copy size={14} />
                   </button>
                 </div>
               )}

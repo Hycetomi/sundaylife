@@ -6,6 +6,7 @@ import TriagePage from './TriagePage';
 import SpacesPage from './SpacesPage';
 import LifehousePage from './LifehousePage';
 import AdminPage from './AdminPage';
+import VolunteersPage from './VolunteersPage';
 
 const DashboardPage = () => (
   <DashboardLayout>
@@ -25,6 +26,14 @@ const DashboardPage = () => (
         element={
           <ProtectedRoute requiredRole="Lead">
             <LifehousePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="volunteers"
+        element={
+          <ProtectedRoute requiredRole="Lead">
+            <VolunteersPage />
           </ProtectedRoute>
         }
       />

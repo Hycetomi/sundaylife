@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import { Users, Church } from 'lucide-react';
+import { Users, Church, Newspaper } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import StaffTable from '@/components/dashboard/admin/StaffTable';
 import LifehouseManager from '@/components/dashboard/admin/LifehouseManager';
+import BlogPostsManager from '@/components/dashboard/admin/BlogPostsManager';
 
-type Tab = 'staff' | 'lifehouses';
+type Tab = 'staff' | 'lifehouses' | 'blog';
 
 const TABS: { id: Tab; label: string; Icon: React.ElementType }[] = [
-  { id: 'staff',      label: 'Staff',      Icon: Users  },
-  { id: 'lifehouses', label: 'Lifehouses', Icon: Church },
+  { id: 'staff',      label: 'Staff',      Icon: Users      },
+  { id: 'lifehouses', label: 'Lifehouses', Icon: Church     },
+  { id: 'blog',       label: 'Blog Posts', Icon: Newspaper  },
 ];
 
 const AdminPage = () => {
@@ -40,6 +42,7 @@ const AdminPage = () => {
       <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
         {tab === 'staff'      && <StaffTable />}
         {tab === 'lifehouses' && <LifehouseManager />}
+        {tab === 'blog'       && <BlogPostsManager />}
       </div>
 
     </div>

@@ -1,14 +1,17 @@
 import { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { BellOff, CheckCheck } from 'lucide-react';
-import { useNotifications } from '@/hooks/useNotifications';
+import type { Notification } from '@/types';
 
 interface Props {
   onClose: () => void;
+  notifications: Notification[];
+  loading: boolean;
+  markRead: (id: string) => void;
+  markAllRead: () => void;
 }
 
-const NotificationPanel = ({ onClose }: Props) => {
-  const { notifications, loading, markRead, markAllRead } = useNotifications();
+const NotificationPanel = ({ onClose, notifications, loading, markRead, markAllRead }: Props) => {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

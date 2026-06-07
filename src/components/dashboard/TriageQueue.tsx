@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CalendarDays, UserPlus, Inbox } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui';
 import TaskStatusBadge from './TaskStatusBadge';
 import AssignTaskModal from './AssignTaskModal';
 import type { Task } from '@/types';
@@ -87,13 +88,14 @@ const TriageQueue = () => {
                       )}
                     </div>
                   </div>
-                  <button
+                  <Button
+                    size="sm"
+                    icon={<UserPlus size={13} />}
                     onClick={() => setActiveTask(task)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-waxy-corn/15 text-waxy-corn font-cabinet font-bold text-xs hover:bg-waxy-corn/25 transition-colors flex-shrink-0"
+                    className="flex-shrink-0 bg-waxy-corn/15 text-waxy-corn hover:bg-waxy-corn/25 hover:shadow-none"
                   >
-                    <UserPlus size={13} />
                     Assign
-                  </button>
+                  </Button>
                 </motion.div>
               ))}
             </div>

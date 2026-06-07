@@ -1,6 +1,6 @@
 // ---- Enums ----
 export type Role = 'Admin' | 'Lead' | 'Volunteer';
-export type TaskStatus = 'Draft' | 'Pending Triage' | 'Assigned' | 'In Review' | 'Completed';
+export type TaskStatus = 'Pending Triage' | 'Assigned' | 'In Review' | 'Completed';
 export type RequestStatus = 'Pending' | 'Approved';
 export type TemplateFieldType = 'text' | 'date' | 'select' | 'textarea';
 
@@ -89,7 +89,8 @@ export interface Space {
   id: string;
   department_id: string | null;
   title: string;
-  external_link: string;
+  external_link: string | null;
+  file_path: string | null;
   created_at: string;
 }
 
@@ -100,6 +101,62 @@ export interface Notification {
   type: string;
   action_link: string | null;
   is_read: boolean;
+  created_at: string;
+}
+
+export interface TaskUpdate {
+  id: string;
+  task_id: string;
+  user_id: string;
+  new_status: TaskStatus | null;
+  comment: string | null;
+  created_at: string;
+  profiles?: { full_name: string } | null;
+}
+
+// ---- Volunteer Applications ----
+export type VolunteerApplicationStatus = 'Pending' | 'Approved' | 'Rejected';
+
+export interface VolunteerApplication {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  message: string | null;
+  preferred_department_id: string | null;
+  assigned_department_id: string | null;
+  status: VolunteerApplicationStatus;
+  created_at: string;
+}
+
+// ---- Blog Pulse ----
+export type BlogCategory = 'Update' | 'Devotion' | 'Story' | 'Events' | 'Culture';
+
+export interface BlogPost {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  body: string | null;
+  category: BlogCategory;
+  author_name: string;
+  cover_image_url: string | null;
+  video_url: string | null;
+  video_type: 'youtube' | 'upload' | null;
+  is_featured: boolean;
+  event_date: string | null;
+  registration_open: boolean;
+  capacity: number | null;
+  published_at: string;
+  created_at: string;
+}
+
+export interface EventRegistration {
+  id: string;
+  post_id: string;
+  full_name: string;
+  email: string;
+  phone: string | null;
   created_at: string;
 }
 

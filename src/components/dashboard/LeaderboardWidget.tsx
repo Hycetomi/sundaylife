@@ -51,7 +51,7 @@ const LeaderboardWidget = () => {
             const pct = Math.max(8, Math.round((entry.completed_count / maxCount) * 100));
             return (
               <div
-                key={entry.id}
+                key={entry.id ?? i}
                 className={cn(
                   'flex items-center gap-3 p-3 rounded-xl transition-colors',
                   isMe ? 'bg-waxy-corn/10 ring-1 ring-waxy-corn/30' : 'hover:bg-white/5'

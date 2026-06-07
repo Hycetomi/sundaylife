@@ -1,11 +1,16 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { ToastProvider } from '@/components/ui/Toast';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import ScrollToTop from '@/components/ScrollToTop';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import HomePage from '@/pages/public/HomePage';
 import JoinLifehousePage from '@/pages/public/JoinLifehousePage';
+import BlogPulsePage from '@/pages/public/BlogPulsePage';
+import ArticlePage from '@/pages/public/ArticlePage';
+import VolunteerPage from '@/pages/public/VolunteerPage';
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 
@@ -14,7 +19,9 @@ const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'));
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AuthProvider>
+        <ToastProvider>
         <div className="min-h-screen font-general bg-pink-swirl text-bitter-liquorice overflow-x-hidden selection:bg-waxy-corn selection:text-bitter-liquorice">
           <Routes>
             {/* Public site */}
@@ -34,6 +41,36 @@ function App() {
                 <>
                   <Navbar />
                   <JoinLifehousePage />
+                  <Footer />
+                </>
+              }
+            />
+            <Route
+              path="/blog-pulse"
+              element={
+                <>
+                  <Navbar />
+                  <BlogPulsePage />
+                  <Footer />
+                </>
+              }
+            />
+            <Route
+              path="/blog-pulse/:slug"
+              element={
+                <>
+                  <Navbar />
+                  <ArticlePage />
+                  <Footer />
+                </>
+              }
+            />
+            <Route
+              path="/volunteer"
+              element={
+                <>
+                  <Navbar />
+                  <VolunteerPage />
                   <Footer />
                 </>
               }
@@ -60,6 +97,7 @@ function App() {
             />
           </Routes>
         </div>
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   );

@@ -1,25 +1,34 @@
 import { motion } from 'framer-motion';
 import { DollarSign, HandHeart, Handshake } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const cards = [
   {
-    title: 'Donate',
-    desc: 'Partner financially to keep the mission alive and growing.',
-    Icon: DollarSign,
+    title:  'Donate',
+    desc:   'Partner financially to keep the mission alive and growing.',
+    Icon:   DollarSign,
+    cta:    'Give Now',
+    href:   '#',
   },
   {
-    title: 'Volunteer',
-    desc: 'Give your time and skills. Join a Sunday Life team today.',
-    Icon: HandHeart,
+    title:  'Volunteer',
+    desc:   'Give your time and skills. Apply to join a SundayLife team — we review every application personally.',
+    Icon:   HandHeart,
+    cta:    'Join the Team',
+    href:   '/volunteer',
   },
   {
-    title: 'Partner',
-    desc: 'Become a brand partner or ambassador for our events.',
-    Icon: Handshake,
+    title:  'Partner',
+    desc:   'Become a brand partner or ambassador for our events.',
+    Icon:   Handshake,
+    cta:    'Get in Touch',
+    href:   '#',
   },
 ];
 
 const SupportUs = () => {
+  const navigate = useNavigate();
+
   return (
     <section id="support-us" className="py-32 bg-bitter-liquorice text-pink-swirl relative overflow-hidden">
 
@@ -45,7 +54,7 @@ const SupportUs = () => {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {cards.map(({ title, desc, Icon }, index) => (
+          {cards.map(({ title, desc, Icon, cta, href }, index) => (
             <motion.div
               key={index}
               className="bg-pink-swirl text-bitter-liquorice rounded-3xl p-10 flex flex-col items-center text-center shadow-2xl"
@@ -63,9 +72,10 @@ const SupportUs = () => {
               <div className="mt-auto w-full">
                 <motion.button
                   whileHover={{ scale: 1.02 }}
+                  onClick={() => href.startsWith('/') ? navigate(href) : undefined}
                   className="px-8 py-4 bg-waxy-corn text-bitter-liquorice font-cabinet font-bold text-lg rounded-full shadow-lg transition-all hover:shadow-[0_0_20px_rgba(247,181,0,0.5)] w-full block"
                 >
-                  Start Now
+                  {cta}
                 </motion.button>
               </div>
             </motion.div>

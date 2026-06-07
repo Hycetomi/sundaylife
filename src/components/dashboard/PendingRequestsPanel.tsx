@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserCheck, Inbox } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { Button, useToast } from '@/components/ui';
 import type { Lifehouse, LifehouseRequest } from '@/types';
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
 }
 
 const PendingRequestsPanel = ({ lifehouse }: Props) => {
+  const toast = useToast();
   const [requests, setRequests] = useState<LifehouseRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [approving, setApproving] = useState<string | null>(null);
@@ -28,14 +30,12 @@ const PendingRequestsPanel = ({ lifehouse }: Props) => {
   const approve = async (req: LifehouseRequest) => {
     setApproving(req.id);
 
-    // 1. Mark request approved
     await supabase
       .from('lifehouse_requests')
       .update({ status: 'Approved' })
       .eq('id', req.id);
 
-    // 2. Create member record assigned to this lifehouse
-    await supabase.from('members').insert([{
+    const { error } = await supabase.from('members').insert([{
       full_name:    req.full_name,
       phone:        req.phone,
       email:        req.email,
@@ -43,8 +43,14 @@ const PendingRequestsPanel = ({ lifehouse }: Props) => {
       lifehouse_id: lifehouse.id,
     }]);
 
-    setRequests(prev => prev.filter(r => r.id !== req.id));
     setApproving(null);
+
+    if (error) {
+      toast.error('Failed to approve request', 'The request was marked approved but member creation failed.');
+    } else {
+      toast.success(`${req.full_name} added to ${lifehouse.name}`);
+      setRequests(prev => prev.filter(r => r.id !== req.id));
+    }
   };
 
   return (
@@ -84,14 +90,15 @@ const PendingRequestsPanel = ({ lifehouse }: Props) => {
                   <p className="font-general text-xs text-pink-swirl/40 mt-0.5">{req.email}</p>
                   <p className="font-general text-xs text-pink-swirl/40">{req.address_area} · {req.phone}</p>
                 </div>
-                <button
+                <Button
+                  size="sm"
+                  icon={<UserCheck size={13} />}
+                  loading={approving === req.id}
                   onClick={() => approve(req)}
-                  disabled={approving === req.id}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-fluorescence/15 text-fluorescence font-cabinet font-bold text-xs hover:bg-fluorescence/25 transition-colors disabled:opacity-50 flex-shrink-0"
+                  className="flex-shrink-0 bg-fluorescence/15 text-fluorescence hover:bg-fluorescence/25 hover:shadow-none"
                 >
-                  <UserCheck size={13} />
-                  {approving === req.id ? 'Adding…' : 'Approve'}
-                </button>
+                  Approve
+                </Button>
               </motion.div>
             ))}
           </div>
