@@ -67,8 +67,6 @@ const PostFormModal = ({
 
   const category = watch('category') as BlogCategory;
   const registrationOpen = watch('registration_open');
-  const titleVal = watch('title');
-
   const onSubmit = async (data: FormValues) => {
     const videoUrl = uploadedMedia?.url || (data.youtube_url?.trim() || null);
     const videoType = uploadedMedia ? 'upload' : (data.youtube_url?.trim() ? 'youtube' : null);
@@ -339,7 +337,7 @@ const BlogPostsManager = () => {
         onConfirm={handleDelete}
         variant="danger"
         title="Delete post"
-        message={`"${deleting?.title}" will be permanently removed.`}
+        description={`"${deleting?.title}" will be permanently removed.`}
         confirmLabel="Delete"
       />
     </div>
