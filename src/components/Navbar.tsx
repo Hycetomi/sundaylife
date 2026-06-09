@@ -22,43 +22,43 @@ const NavLogo = ({ className = 'h-8 w-8' }: { className?: string }) => {
 // ── Nav links (no Volunteer — that lives behind Join Us) ──────────────────────
 
 const NAV_LINKS = [
-  { label: 'About',            href: '/#about' },
-  { label: 'Blog Pulse',       href: '/blog-pulse' },
-  { label: 'Support Us',       href: '/#support-us' },
+  { label: 'About', href: '/#about' },
+  { label: 'Blog Pulse', href: '/blog-pulse' },
+  { label: 'Support Us', href: '/#support-us' },
   { label: 'Join a Lifehouse', href: '/join-a-lifehouse' },
 ];
 
 // ── Page label for the indicator ──────────────────────────────────────────────
 
 const PAGE_LABEL: Record<string, string> = {
-  '/blog-pulse':       'Blog Pulse',
+  '/blog-pulse': 'Blog Pulse',
   '/join-a-lifehouse': 'Join a Lifehouse',
-  '/volunteer':        'Volunteer',
-  '/login':            'Staff Login',
-  '/register':         'Register',
+  '/volunteer': 'Volunteer',
+  '/login': 'Staff Login',
+  '/register': 'Register',
 };
 
 function getPageLabel(pathname: string): string {
   if (pathname.startsWith('/blog-pulse/')) return 'Blog Pulse';
-  if (pathname.startsWith('/dashboard'))  return 'Dashboard';
+  if (pathname.startsWith('/dashboard')) return 'Dashboard';
   return PAGE_LABEL[pathname] ?? '';
 }
 
 // ── Shared glass styles ───────────────────────────────────────────────────────
 
 const PILL_GLASS: React.CSSProperties = {
-  background:             'rgba(8, 20, 12, 0.90)',
-  backdropFilter:         'blur(28px) saturate(200%)',
-  WebkitBackdropFilter:   'blur(28px) saturate(200%)',
-  border:                 '1px solid rgba(255, 255, 255, 0.15)',
-  boxShadow:              '0 8px 36px rgba(0,0,0,0.55), inset 0 1.5px 0 rgba(255,255,255,0.12)',
+  background: 'rgba(8, 20, 12, 0.90)',
+  backdropFilter: 'blur(28px) saturate(200%)',
+  WebkitBackdropFilter: 'blur(28px) saturate(200%)',
+  border: '1px solid rgba(255, 255, 255, 0.15)',
+  boxShadow: '0 8px 36px rgba(0,0,0,0.55), inset 0 1.5px 0 rgba(255,255,255,0.12)',
 };
 
 const INDICATOR_GLASS: React.CSSProperties = {
-  background:             'rgba(8, 20, 12, 0.65)',
-  backdropFilter:         'blur(16px) saturate(180%)',
-  WebkitBackdropFilter:   'blur(16px) saturate(180%)',
-  border:                 '1px solid rgba(255, 255, 255, 0.08)',
+  background: 'rgba(8, 20, 12, 0.65)',
+  backdropFilter: 'blur(16px) saturate(180%)',
+  WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+  border: '1px solid rgba(255, 255, 255, 0.08)',
 };
 
 // ── Divider ───────────────────────────────────────────────────────────────────
@@ -70,13 +70,13 @@ const Divider = () => (
 // ── Navbar ────────────────────────────────────────────────────────────────────
 
 const Navbar = () => {
-  const [open, setOpen]         = useState(false);
+  const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const drawerRef               = useRef<HTMLDivElement>(null);
-  const location                = useLocation();
-  const isHome                  = location.pathname === '/';
-  const pageLabel               = getPageLabel(location.pathname);
-  const { scrollY }             = useScroll();
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+  const isHome = location.pathname === '/';
+  const pageLabel = getPageLabel(location.pathname);
+  const { scrollY } = useScroll();
 
   // Non-home pages always show pill; home page switches at 85 vh
   useEffect(() => {
@@ -259,10 +259,10 @@ const Navbar = () => {
               transition={{ type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
               className="fixed inset-y-0 right-0 w-72 z-50 flex flex-col pt-10 px-8 pb-10"
               style={{
-                background:           'rgba(8, 20, 12, 0.94)',
-                backdropFilter:       'blur(32px) saturate(200%)',
+                background: 'rgba(8, 20, 12, 0.94)',
+                backdropFilter: 'blur(32px) saturate(200%)',
                 WebkitBackdropFilter: 'blur(32px) saturate(200%)',
-                borderLeft:           '1px solid rgba(255, 255, 255, 0.10)',
+                borderLeft: '1px solid rgba(255, 255, 255, 0.10)',
               }}
             >
               {/* Close */}
@@ -283,12 +283,12 @@ const Navbar = () => {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.05, duration: 0.22, ease: 'easeOut' }}
                   >
-                    <Link
-                      to={item.href}
+                    <a
+                      href={item.href}
                       className="block py-3 font-cabinet font-bold text-xl text-pink-swirl/80 hover:text-waxy-corn transition-colors border-b border-white/5"
                     >
                       {item.label}
-                    </Link>
+                    </a>
                   </motion.div>
                 ))}
               </nav>
