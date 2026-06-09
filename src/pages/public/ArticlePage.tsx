@@ -32,6 +32,16 @@ const RegistrationSection = ({ post, regCount }: { post: BlogPost; regCount: num
   });
 
   const onSubmit = async (data: RegValues) => {
+    if (post.capacity) {
+      const { count } = await supabase
+        .from('event_registrations')
+        .select('id', { count: 'exact', head: true })
+        .eq('post_id', post.id);
+      if ((count ?? 0) >= post.capacity) {
+        toast.warning('Event is full', 'Sorry, this event has reached capacity.');
+        return;
+      }
+    }
     const { error } = await supabase.from('event_registrations').insert([{
       post_id:   post.id,
       full_name: data.full_name,
@@ -137,25 +147,19 @@ const ArticlePage = () => {
 
   useEffect(() => {
     if (!slug) return;
-    Promise.all([
-      supabase.from('blog_posts').select('*').eq('slug', slug).single(),
-      supabase.from('event_registrations').select('id', { count: 'exact', head: true }).eq('post_id', slug),
-    ]).then(([{ data, error }, { count }]) => {
-      if (error || !data) { setNotFound(true); }
-      else { setPost(data as BlogPost); setRegCount(count ?? 0); }
+    const load = async () => {
+      const { data, error } = await supabase.from('blog_posts').select('*').eq('slug', slug).single();
+      if (error || !data) { setNotFound(true); setLoading(false); return; }
+      setPost(data as BlogPost);
+      const { count } = await supabase
+        .from('event_registrations')
+        .select('id', { count: 'exact', head: true })
+        .eq('post_id', data.id);
+      setRegCount(count ?? 0);
       setLoading(false);
-    });
+    };
+    load();
   }, [slug]);
-
-  // fix: fetch reg count by post id, not slug
-  useEffect(() => {
-    if (!post) return;
-    supabase
-      .from('event_registrations')
-      .select('id', { count: 'exact', head: true })
-      .eq('post_id', post.id)
-      .then(({ count }) => setRegCount(count ?? 0));
-  }, [post]);
 
   const backHref = post ? `/blog-pulse?category=${post.category}` : '/blog-pulse';
 
@@ -203,10 +207,10 @@ const ArticlePage = () => {
     : [];
 
   return (
-    <main className="min-h-screen bg-white text-bitter-liquorice pt-20">
+    <main className="min-h-screen bg-white text-bitter-liquorice">
 
       {/* Hero strip */}
-      <div className="bg-bitter-liquorice pt-10 pb-14 px-6">
+      <div className="bg-bitter-liquorice pt-20 pb-14 px-6">
         <div className="max-w-3xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <button

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2, ExternalLink } from 'lucide-react';
+import { Plus, Pencil, Trash2, ExternalLink, Users, Download } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,7 +8,7 @@ import { toSlug } from '@/lib/utils';
 import { CATEGORY_CONFIG, CATEGORIES } from '@/components/blogpulse/config';
 import MediaUploader from '@/components/blogpulse/MediaUploader';
 import { Button, Input, Textarea, SelectField, Modal, ConfirmDialog, useToast } from '@/components/ui';
-import type { BlogPost, BlogCategory } from '@/types';
+import type { BlogPost, BlogCategory, EventRegistration } from '@/types';
 
 // ── Form schema ───────────────────────────────────────────────────────────────
 
@@ -84,7 +84,7 @@ const PostFormModal = ({
       is_featured:       data.is_featured ?? false,
       event_date:        data.event_date || null,
       registration_open: data.registration_open ?? false,
-      capacity:          data.capacity ? parseInt(data.capacity) : null,
+      capacity:          (() => { const n = parseInt(data.capacity ?? '', 10); return data.capacity && !Number.isNaN(n) ? n : null; })(),
     };
 
     const { error } = isEdit
@@ -208,6 +208,121 @@ const PostFormModal = ({
   );
 };
 
+// ── Registrations modal ───────────────────────────────────────────────────────
+
+const RegistrationsModal = ({
+  post,
+  onClose,
+}: {
+  post: BlogPost;
+  onClose: () => void;
+}) => {
+  const [regs, setRegs] = useState<EventRegistration[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from('event_registrations')
+      .select('*')
+      .eq('post_id', post.id)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        setRegs((data as EventRegistration[]) ?? []);
+        setLoading(false);
+      });
+  }, [post.id]);
+
+  const exportCSV = () => {
+    const headers = ['Full Name', 'Email', 'Phone', 'Registered At'];
+    const rows = regs.map(r => [
+      r.full_name,
+      r.email,
+      r.phone ?? '',
+      new Date(r.created_at).toLocaleString('en-GB'),
+    ]);
+    const csv = [headers, ...rows]
+      .map(row => row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `registrations-${post.slug}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title="Event Registrations"
+      size="lg"
+      footer={
+        <div className="flex items-center justify-between w-full">
+          <span className="font-general text-xs text-pink-swirl/40">
+            {loading ? '—' : `${regs.length} ${regs.length === 1 ? 'registration' : 'registrations'}`}
+          </span>
+          <div className="flex gap-3">
+            {!loading && regs.length > 0 && (
+              <Button variant="secondary" size="sm" icon={<Download size={13} />} onClick={exportCSV}>
+                Export CSV
+              </Button>
+            )}
+            <Button variant="secondary" onClick={onClose}>Close</Button>
+          </div>
+        </div>
+      }
+    >
+      <p className="font-cabinet font-bold text-pink-swirl/60 text-sm bg-white/5 rounded-xl px-4 py-3 mb-5 line-clamp-1">
+        {post.title}
+      </p>
+
+      {loading && (
+        <div className="space-y-2">
+          {[1, 2, 3].map(i => <div key={i} className="h-12 rounded-xl bg-white/5 animate-pulse" />)}
+        </div>
+      )}
+
+      {!loading && regs.length === 0 && (
+        <div className="flex flex-col items-center py-12 text-pink-swirl/25">
+          <Users size={36} strokeWidth={1} className="mb-3" />
+          <p className="font-general text-sm">No registrations yet.</p>
+        </div>
+      )}
+
+      {!loading && regs.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-white/8">
+                {['Name', 'Email', 'Phone', 'Date'].map(h => (
+                  <th key={h} className="pb-3 pr-4 text-left font-general text-xs text-pink-swirl/30 font-normal tracking-wide uppercase">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {regs.map(r => (
+                <tr key={r.id}>
+                  <td className="py-3 pr-4 font-general text-pink-swirl font-medium">{r.full_name}</td>
+                  <td className="py-3 pr-4 font-general text-pink-swirl/60">{r.email}</td>
+                  <td className="py-3 pr-4 font-general text-pink-swirl/50">{r.phone ?? '—'}</td>
+                  <td className="py-3 pr-4 font-general text-pink-swirl/40 text-xs whitespace-nowrap">
+                    {new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                      .format(new Date(r.created_at))}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Modal>
+  );
+};
+
 // ── Manager ───────────────────────────────────────────────────────────────────
 
 const BlogPostsManager = () => {
@@ -216,6 +331,7 @@ const BlogPostsManager = () => {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<BlogPost | null | undefined>(undefined);
   const [deleting, setDeleting] = useState<BlogPost | null>(null);
+  const [viewingRegs, setViewingRegs] = useState<BlogPost | null>(null);
 
   const load = async () => {
     const { data } = await supabase
@@ -303,6 +419,13 @@ const BlogPostsManager = () => {
                     </td>
                     <td className="py-3">
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => setViewingRegs(post)}
+                          title="View registrations"
+                          className="p-1.5 rounded-lg text-pink-swirl/40 hover:text-fluorescence hover:bg-white/5 transition-colors"
+                        >
+                          <Users size={13} />
+                        </button>
                         <button onClick={() => setEditing(post)}
                           className="p-1.5 rounded-lg text-pink-swirl/40 hover:text-waxy-corn hover:bg-white/5 transition-colors">
                           <Pencil size={13} />
@@ -319,6 +442,11 @@ const BlogPostsManager = () => {
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* Registrations viewer */}
+      {viewingRegs && (
+        <RegistrationsModal post={viewingRegs} onClose={() => setViewingRegs(null)} />
       )}
 
       {/* Create / Edit modal */}

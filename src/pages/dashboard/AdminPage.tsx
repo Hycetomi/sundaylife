@@ -1,14 +1,18 @@
 import { useState } from 'react';
-import { Users, Church, Newspaper } from 'lucide-react';
+import { Users, Church, Newspaper, UserPlus, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import StaffTable from '@/components/dashboard/admin/StaffTable';
 import LifehouseManager from '@/components/dashboard/admin/LifehouseManager';
 import BlogPostsManager from '@/components/dashboard/admin/BlogPostsManager';
+import InviteStaffPanel from '@/components/dashboard/admin/InviteStaffPanel';
+import VolunteerBatchPanel from '@/components/dashboard/admin/VolunteerBatchPanel';
 
-type Tab = 'staff' | 'lifehouses' | 'blog';
+type Tab = 'staff' | 'invite' | 'batches' | 'lifehouses' | 'blog';
 
 const TABS: { id: Tab; label: string; Icon: React.ElementType }[] = [
   { id: 'staff',      label: 'Staff',      Icon: Users      },
+  { id: 'invite',     label: 'Invite',     Icon: UserPlus   },
+  { id: 'batches',    label: 'Batches',    Icon: Layers     },
   { id: 'lifehouses', label: 'Lifehouses', Icon: Church     },
   { id: 'blog',       label: 'Blog Posts', Icon: Newspaper  },
 ];
@@ -20,7 +24,7 @@ const AdminPage = () => {
     <div className="max-w-5xl space-y-6">
 
       {/* Tab bar */}
-      <div className="flex gap-1 bg-white/5 border border-white/10 rounded-xl p-1 w-fit">
+      <div className="flex gap-1 bg-white/5 border border-white/10 rounded-xl p-1 w-fit flex-wrap">
         {TABS.map(({ id, label, Icon }) => (
           <button
             key={id}
@@ -41,6 +45,8 @@ const AdminPage = () => {
       {/* Panel */}
       <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
         {tab === 'staff'      && <StaffTable />}
+        {tab === 'invite'     && <InviteStaffPanel />}
+        {tab === 'batches'    && <VolunteerBatchPanel />}
         {tab === 'lifehouses' && <LifehouseManager />}
         {tab === 'blog'       && <BlogPostsManager />}
       </div>

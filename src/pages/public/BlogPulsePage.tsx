@@ -6,7 +6,54 @@ import { supabase } from '@/lib/supabase';
 import { CATEGORY_CONFIG, CATEGORIES } from '@/components/blogpulse/config';
 import CategorySidebar from '@/components/blogpulse/CategorySidebar';
 import PostCard from '@/components/blogpulse/PostCard';
+import DecorativeSVG from '@/components/ui/DecorativeSVG';
 import type { BlogPost, BlogCategory } from '@/types';
+
+// ── Fallback posts (shown when DB has no content yet) ─────────────────────────
+
+const FALLBACK_POSTS: BlogPost[] = [
+  {
+    id: 'fb-1', slug: 'summer-camp-26-registrations-open', category: 'Update',
+    title: "Summer Camp '26 Registrations Open",
+    excerpt: 'Registration is live for our biggest youth gathering of the year. Secure your spot before spaces fill.',
+    body: null, author_name: 'SundayLife', cover_image_url: null,
+    video_url: null, video_type: null, is_featured: true,
+    event_date: null, registration_open: false, capacity: null,
+    published_at: '2026-06-01T00:00:00Z', created_at: '2026-06-01T00:00:00Z',
+  },
+  {
+    id: 'fb-2', slug: 'finding-peace-in-chaos', category: 'Devotion',
+    title: 'Finding Peace in Chaos', excerpt: 'A reflection on finding stillness when life is loud.',
+    body: null, author_name: 'SundayLife', cover_image_url: null,
+    video_url: null, video_type: null, is_featured: false,
+    event_date: null, registration_open: false, capacity: null,
+    published_at: '2026-05-18T00:00:00Z', created_at: '2026-05-18T00:00:00Z',
+  },
+  {
+    id: 'fb-3', slug: 'why-we-worship-loud', category: 'Culture',
+    title: 'Why We Worship Loud', excerpt: 'The theology and joy behind expressive worship.',
+    body: null, author_name: 'SundayLife', cover_image_url: null,
+    video_url: null, video_type: null, is_featured: false,
+    event_date: null, registration_open: false, capacity: null,
+    published_at: '2026-05-10T00:00:00Z', created_at: '2026-05-10T00:00:00Z',
+  },
+  {
+    id: 'fb-4', slug: 'sarahs-journey-to-faith', category: 'Story',
+    title: "Sarah's Journey to Faith", excerpt: 'One woman\'s story of doubt, perseverance, and breakthrough.',
+    body: null, author_name: 'SundayLife', cover_image_url: null,
+    video_url: null, video_type: null, is_featured: false,
+    event_date: null, registration_open: false, capacity: null,
+    published_at: '2026-04-28T00:00:00Z', created_at: '2026-04-28T00:00:00Z',
+  },
+  {
+    id: 'fb-5', slug: 'night-of-worship-march', category: 'Events',
+    title: 'Night of Worship: March', excerpt: 'Highlights and moments from our last night of corporate worship.',
+    body: null, author_name: 'SundayLife', cover_image_url: null,
+    video_url: null, video_type: null, is_featured: false,
+    event_date: null, registration_open: false, capacity: null,
+    published_at: '2026-04-12T00:00:00Z', created_at: '2026-04-12T00:00:00Z',
+  },
+];
 
 // ── Featured hero card ────────────────────────────────────────────────────────
 
@@ -161,6 +208,7 @@ const CategoryTabBar = ({
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 const BlogPulsePage = () => {
+  const [stripHovered, setStripHovered] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const rawCat = searchParams.get('category');
   const active: BlogCategory | 'All' = (CATEGORIES as string[]).includes(rawCat ?? '')
@@ -176,7 +224,8 @@ const BlogPulsePage = () => {
       .select('*')
       .order('published_at', { ascending: false })
       .then(({ data }) => {
-        setPosts((data as BlogPost[]) ?? []);
+        const fetched = (data as BlogPost[]) ?? [];
+        setPosts(fetched.length > 0 ? fetched : FALLBACK_POSTS);
         setLoading(false);
       });
   }, []);
@@ -195,10 +244,18 @@ const BlogPulsePage = () => {
   const ActiveIcon = cfg?.Icon;
 
   return (
-    <main className="min-h-screen bg-white text-bitter-liquorice pt-20">
+    <main className="min-h-screen bg-white text-bitter-liquorice">
 
       {/* ── Hero strip ── */}
-      <div className="bg-bitter-liquorice text-pink-swirl py-14 px-6">
+      <div
+        className="bg-bitter-liquorice text-pink-swirl pt-20 pb-14 px-6 relative overflow-hidden"
+        onMouseEnter={() => setStripHovered(true)}
+        onMouseLeave={() => setStripHovered(false)}
+      >
+        <DecorativeSVG hovered={stripHovered} src="/Cross.svg"         size={56} top="10%"    right="3%"  opacity={0.13} rotate={25}  floatDuration={5}   scrollFactor={0.06} />
+        <DecorativeSVG hovered={stripHovered} src="/Blunt%20star.svg"  size={44} bottom="10%" left="2%"   opacity={0.12} rotate={-10} floatDuration={4.2} scrollFactor={0.08} />
+        <DecorativeSVG hovered={stripHovered} src="/star.svg"           size={36} top="20%"    left="30%"  opacity={0.08} rotate={15}  floatDuration={3.8} scrollFactor={0.10} />
+        <DecorativeSVG hovered={stripHovered} src="/8-sided_star.svg"  size={32} bottom="15%" right="15%" opacity={0.09} rotate={-5}  floatDuration={4.5} scrollFactor={0.07} />
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 16 }}

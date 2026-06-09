@@ -90,6 +90,27 @@ const TaskDetailModal = ({ task, onClose, onUpdated }: Props) => {
     onUpdated();
   };
 
+  const renderDescription = (desc: string) => {
+    try {
+      const parsed = JSON.parse(desc);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return (
+          <dl className="space-y-2.5">
+            {Object.entries(parsed).map(([key, val]) => (
+              <div key={key}>
+                <dt className="font-cabinet font-bold text-[10px] uppercase tracking-wider text-pink-swirl/30">
+                  {key.replace(/_/g, ' ')}
+                </dt>
+                <dd className="font-general text-sm text-pink-swirl/70 mt-0.5">{String(val)}</dd>
+              </div>
+            ))}
+          </dl>
+        );
+      }
+    } catch { /* plain text */ }
+    return <p className="font-general text-sm text-pink-swirl/70 whitespace-pre-wrap">{desc}</p>;
+  };
+
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleString('en-GB', {
       day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
@@ -143,7 +164,7 @@ const TaskDetailModal = ({ task, onClose, onUpdated }: Props) => {
         {task.description && (
           <div className="px-6 py-4 border-b border-white/5 flex-shrink-0">
             <p className="font-general text-xs uppercase tracking-wider text-pink-swirl/30 mb-1.5">Description</p>
-            <p className="font-general text-sm text-pink-swirl/70 whitespace-pre-wrap">{task.description}</p>
+            {renderDescription(task.description)}
           </div>
         )}
 

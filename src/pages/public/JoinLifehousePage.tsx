@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import DecorativeSVG from '@/components/ui/DecorativeSVG';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
+import { useToast } from '@/components/ui';
 
 const schema = z.object({
   full_name: z.string().min(2, 'Please enter your full name'),
@@ -24,7 +26,9 @@ const fields: { name: keyof FormValues; label: string; type: string; placeholder
 ];
 
 const JoinLifehousePage = () => {
+  const toast = useToast();
   const [submitted, setSubmitted] = useState(false);
+  const [hovered, setHovered]     = useState(false);
 
   const {
     register,
@@ -34,12 +38,22 @@ const JoinLifehousePage = () => {
 
   const onSubmit = async (data: FormValues) => {
     const { error } = await supabase.from('lifehouse_requests').insert([data]);
-    if (error) throw new Error(error.message);
+    if (error) { toast.error('Something went wrong', 'Please try again in a moment.'); return; }
     setSubmitted(true);
   };
 
   return (
-    <section className="min-h-screen pt-28 pb-20 bg-pink-swirl flex items-center justify-center px-4">
+    <section
+      className="min-h-screen pt-28 pb-20 bg-pink-swirl flex items-center justify-center px-4 relative overflow-hidden"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <DecorativeSVG hovered={hovered} src="/Blunt%20star.svg" size={72} top="6%"    right="3%"  opacity={0.08} rotate={-12} floatDuration={5.5} scrollFactor={0.06} />
+      <DecorativeSVG hovered={hovered} src="/star.svg"          size={44} top="20%"   right="8%"  opacity={0.07} rotate={30}  floatDuration={4.4} scrollFactor={0.09} />
+      <DecorativeSVG hovered={hovered} src="/Clove.svg"         size={56} bottom="6%" left="3%"   opacity={0.07} rotate={20}  floatDuration={4.0} scrollFactor={0.10} />
+      <DecorativeSVG hovered={hovered} src="/Cross.svg"         size={40} bottom="22%"left="8%"   opacity={0.06} rotate={-5}  floatDuration={3.5} scrollFactor={0.08} />
+      <DecorativeSVG hovered={hovered} src="/8-sided_star.svg"  size={32} top="50%"   left="2%"   opacity={0.06} rotate={12}  floatDuration={4.8} scrollFactor={0.11} />
+      <DecorativeSVG hovered={hovered} src="/Cross.svg"         size={28} top="70%"   right="5%"  opacity={0.05} rotate={45}  floatDuration={3.2} scrollFactor={0.07} />
       <div className="w-full max-w-lg">
 
         <AnimatePresence mode="wait">

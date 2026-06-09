@@ -1,12 +1,21 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import DecorativeSVG from '@/components/ui/DecorativeSVG';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { HandHeart, CheckCircle } from 'lucide-react';
+import { HandHeart, CheckCircle, Clock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { Input, Textarea, SelectField, Button } from '@/components/ui';
+import { Input, Textarea, SelectField, Button, useToast } from '@/components/ui';
 import type { Department } from '@/types';
+
+type BatchStatus = 'open' | 'full' | 'ongoing';
+
+interface VolunteerBatch {
+  status: BatchStatus;
+  label: string;
+  custom_message: string | null;
+}
 
 const schema = z.object({
   full_name: z.string().min(2, 'Enter your full name'),
@@ -19,12 +28,25 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 const VolunteerPage = () => {
+  const toast = useToast();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [submitted, setSubmitted] = useState(false);
+  const [batch, setBatch] = useState<VolunteerBatch | null>(null);
+  const [batchLoading, setBatchLoading] = useState(true);
 
   useEffect(() => {
-    supabase.from('departments').select('*').order('name').then(({ data }) => {
-      setDepartments((data as Department[]) ?? []);
+    Promise.all([
+      supabase.from('departments').select('*').order('name'),
+      supabase
+        .from('volunteer_batches')
+        .select('status, label, custom_message')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single(),
+    ]).then(([{ data: depts }, { data: batchData }]) => {
+      setDepartments((depts as Department[]) ?? []);
+      setBatch((batchData as VolunteerBatch) ?? null);
+      setBatchLoading(false);
     });
   }, []);
 
@@ -40,12 +62,24 @@ const VolunteerPage = () => {
       preferred_department_id: data.preferred_department_id || null,
       message:                 data.message,
     }]);
-    if (error) throw new Error(error.message);
+    if (error) { toast.error('Something went wrong', 'Please try again in a moment.'); return; }
     setSubmitted(true);
   };
 
+  const [hovered, setHovered] = useState(false);
+
   return (
-    <main className="min-h-screen bg-bitter-liquorice text-pink-swirl pt-20">
+    <main
+      className="min-h-screen bg-bitter-liquorice text-pink-swirl pt-24 relative overflow-hidden"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <DecorativeSVG hovered={hovered} src="/star.svg"          size={64} top="8%"    right="3%"  opacity={0.13} rotate={18}  floatDuration={5}   scrollFactor={0.07} />
+      <DecorativeSVG hovered={hovered} src="/Blunt%20star.svg"  size={52} top="22%"   right="7%"  opacity={0.11} rotate={-20} floatDuration={4.6} scrollFactor={0.06} />
+      <DecorativeSVG hovered={hovered} src="/Cross.svg"         size={48} top="45%"   left="2%"   opacity={0.12} rotate={-10} floatDuration={4.2} scrollFactor={0.10} />
+      <DecorativeSVG hovered={hovered} src="/8-sided_star.svg"  size={40} top="55%"   right="1%"  opacity={0.11} rotate={5}   floatDuration={3.8} scrollFactor={0.12} />
+      <DecorativeSVG hovered={hovered} src="/Clove.svg"         size={44} bottom="20%"left="5%"   opacity={0.10} rotate={25}  floatDuration={5.2} scrollFactor={0.09} />
+      <DecorativeSVG hovered={hovered} src="/Cross.svg"         size={36} bottom="8%" right="4%"  opacity={0.11} rotate={40}  floatDuration={3.5} scrollFactor={0.11} />
 
       {/* ── Hero strip ── */}
       <div className="max-w-3xl mx-auto px-6 pt-16 pb-12">
@@ -74,6 +108,36 @@ const VolunteerPage = () => {
 
       {/* ── Form / Success ── */}
       <div className="max-w-3xl mx-auto px-6 pb-24">
+
+        {/* Batch closed / full state */}
+        {!batchLoading && batch && batch.status !== 'open' && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="bg-white/5 border border-white/10 rounded-2xl p-10 text-center mb-8"
+          >
+            <div className="w-16 h-16 rounded-full bg-waxy-corn/10 border border-waxy-corn/15 flex items-center justify-center mx-auto mb-6">
+              <Clock size={28} className="text-waxy-corn/70" strokeWidth={1.5} />
+            </div>
+            <h2 className="font-cabinet font-black text-2xl md:text-3xl uppercase text-pink-swirl mb-3">
+              {batch.status === 'full' ? 'This Batch is Full' : 'Applications Paused'}
+            </h2>
+            <p className="font-general text-pink-swirl/55 text-lg max-w-md mx-auto leading-relaxed">
+              {batch.custom_message ?? (
+                batch.status === 'full'
+                  ? "We've reached capacity for this intake. The next batch will be announced soon — keep an eye on our channels."
+                  : "We're currently onboarding our current batch of volunteers. We'll open applications for the next round shortly."
+              )}
+            </p>
+            <p className="font-general text-pink-swirl/30 text-sm mt-6">
+              Current batch: {batch.label}
+            </p>
+          </motion.div>
+        )}
+
+        {/* Show form only when batch is open */}
+        {(batchLoading || !batch || batch.status === 'open') && (
         <AnimatePresence mode="wait">
           {submitted ? (
             <motion.div
@@ -155,6 +219,7 @@ const VolunteerPage = () => {
             </motion.form>
           )}
         </AnimatePresence>
+        )}
       </div>
     </main>
   );

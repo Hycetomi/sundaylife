@@ -52,14 +52,14 @@ export const useNotifications = () => {
   }, [user]);
 
   const markRead = async (id: string) => {
-    await supabase.from('notifications').update({ is_read: true }).eq('id', id);
-    setNotifications(prev => prev.filter(n => n.id !== id));
+    const { error } = await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+    if (!error) setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
   const markAllRead = async () => {
     if (!user) return;
-    await supabase.from('notifications').update({ is_read: true }).eq('user_id', user.id).eq('is_read', false);
-    setNotifications([]);
+    const { error } = await supabase.from('notifications').update({ is_read: true }).eq('user_id', user.id).eq('is_read', false);
+    if (!error) setNotifications([]);
   };
 
   return { notifications, loading, markRead, markAllRead, unreadCount: notifications.length };

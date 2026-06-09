@@ -29,7 +29,8 @@ const AssignTaskModal = ({ task, onClose, onAssigned }: Props) => {
   const handleAssign = async () => {
     if (!selectedId) return;
     setSaving(true);
-    const assignee = volunteers.find(v => v.id === selectedId)!;
+    const assignee = volunteers.find(v => v.id === selectedId);
+    if (!assignee) { setSaving(false); return; }
 
     const { error } = await supabase
       .from('tasks')

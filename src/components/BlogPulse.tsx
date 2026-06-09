@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import DecorativeSVG from '@/components/ui/DecorativeSVG';
 
 // ── Article data ──────────────────────────────────────────────────────────────
 
@@ -73,9 +75,22 @@ const ARTICLES = [
 
 const BlogPulse = () => {
   const navigate = useNavigate();
+  const [hovered, setHovered] = useState(false);
 
   return (
-  <section id="blog-pulse" className="py-24 bg-white text-bitter-liquorice">
+  <section
+    id="blog-pulse"
+    className="py-24 bg-white text-bitter-liquorice relative overflow-hidden z-10"
+    onMouseEnter={() => setHovered(true)}
+    onMouseLeave={() => setHovered(false)}
+  >
+    <DecorativeSVG hovered={hovered} src="/8-sided_star.svg" size={56} top="4%"    right="2%"  opacity={0.07} rotate={5}   floatDuration={5}   scrollFactor={0.06} />
+    <DecorativeSVG hovered={hovered} src="/Cross.svg"         size={44} top="16%"   right="5%"  opacity={0.06} rotate={22}  floatDuration={4.6} scrollFactor={0.09} />
+    <DecorativeSVG hovered={hovered} src="/star.svg"           size={36} top="42%"   right="1%"  opacity={0.06} rotate={30}  floatDuration={3.5} scrollFactor={0.08} />
+    <DecorativeSVG hovered={hovered} src="/Blunt%20star.svg"  size={48} bottom="20%"right="3%"  opacity={0.07} rotate={-12} floatDuration={5.2} scrollFactor={0.07} />
+    <DecorativeSVG hovered={hovered} src="/Clove.svg"          size={52} bottom="6%" left="1%"   opacity={0.07} rotate={-15} floatDuration={4.2} scrollFactor={0.12} />
+    <DecorativeSVG hovered={hovered} src="/star.svg"           size={40} bottom="28%"left="3%"   opacity={0.06} rotate={-30} floatDuration={4.8} scrollFactor={0.10} />
+    <DecorativeSVG hovered={hovered} src="/8-sided_star.svg"  size={32} top="60%"   left="0%"   opacity={0.05} rotate={15}  floatDuration={3.8} scrollFactor={0.11} />
     <div className="max-w-7xl mx-auto px-6">
 
       {/* ── Section header ── */}
