@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useLenis } from '@/hooks/useLenis';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProvider } from '@/components/ui/Toast';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -17,6 +18,8 @@ import RegisterPage from '@/pages/auth/RegisterPage';
 const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'));
 
 function App() {
+  useLenis();
+
   return (
     <BrowserRouter>
       <ScrollToTop />
