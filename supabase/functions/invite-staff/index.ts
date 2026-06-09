@@ -1,9 +1,15 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 
+const json = (data: unknown, status = 200) =>
+  new Response(JSON.stringify(data), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   try {
@@ -14,16 +20,12 @@ Deno.serve(async (req) => {
 
     // Verify caller is an Admin
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
-    }
+    if (!authHeader) return json({ error: 'Unauthorized' }, 401);
 
     const { data: { user: caller }, error: authErr } = await supabaseAdmin.auth.getUser(
       authHeader.replace('Bearer ', ''),
     );
-    if (authErr || !caller) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
-    }
+    if (authErr || !caller) return json({ error: 'Unauthorized' }, 401);
 
     const { data: callerProfile } = await supabaseAdmin
       .from('profiles')
@@ -31,22 +33,16 @@ Deno.serve(async (req) => {
       .eq('id', caller.id)
       .single();
 
-    if (callerProfile?.role !== 'Admin') {
-      return new Response(JSON.stringify({ error: 'Admin access required' }), { status: 403, headers: corsHeaders });
-    }
+    if (callerProfile?.role !== 'Admin') return json({ error: 'Admin access required' }, 403);
 
-    // Parse and validate body
     const { email, full_name, role, department_id } = await req.json();
 
     if (!email || !full_name || !role) {
-      return new Response(
-        JSON.stringify({ error: 'email, full_name, and role are required' }),
-        { status: 400, headers: corsHeaders },
-      );
+      return json({ error: 'email, full_name, and role are required' }, 400);
     }
 
     if (!['Admin', 'Lead', 'Volunteer'].includes(role)) {
-      return new Response(JSON.stringify({ error: 'Invalid role' }), { status: 400, headers: corsHeaders });
+      return json({ error: 'Invalid role' }, 400);
     }
 
     const siteUrl = Deno.env.get('SITE_URL') ?? '';
@@ -56,13 +52,11 @@ Deno.serve(async (req) => {
       redirectTo: `${siteUrl}/register`,
     });
 
-    if (error) {
-      return new Response(JSON.stringify({ error: error.message }), { status: 400, headers: corsHeaders });
-    }
+    if (error) return json({ error: error.message }, 400);
 
-    return new Response(JSON.stringify({ success: true, userId: data.user.id }), { headers: corsHeaders });
+    return json({ success: true, userId: data.user.id });
 
   } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), { status: 500, headers: corsHeaders });
+    return json({ error: String(err) }, 500);
   }
 });

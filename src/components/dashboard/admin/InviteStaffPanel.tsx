@@ -53,7 +53,18 @@ const InviteStaffPanel = () => {
     });
 
     if (res.error || res.data?.error) {
-      toast.error('Invite failed', res.data?.error ?? res.error?.message ?? 'Unknown error');
+      // FunctionsHttpError wraps the actual response body — read it properly
+      let msg = res.data?.error ?? 'Unknown error';
+      if (res.error && !res.data?.error) {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const body = await (res.error as any).context?.json?.();
+          msg = body?.error ?? res.error.message;
+        } catch {
+          msg = res.error.message;
+        }
+      }
+      toast.error('Invite failed', msg);
       return;
     }
 
@@ -69,9 +80,11 @@ const InviteStaffPanel = () => {
       <div className="flex gap-3 bg-waxy-corn/8 border border-waxy-corn/20 rounded-xl p-4">
         <Info size={16} className="text-waxy-corn flex-shrink-0 mt-0.5" />
         <p className="font-general text-sm text-pink-swirl/70 leading-relaxed">
-          Staff can only join via invitation. Fill in the form below and they'll receive an email
-          to set their password and activate their account. Their role and department are applied
-          automatically.
+          Staff can only join via invitation. They'll receive an email to set their password and
+          activate their account. Their role and department are applied automatically.{' '}
+          <span className="text-pink-swirl/50">
+            To resend an expired link, submit the form again with the same email address.
+          </span>
         </p>
       </div>
 

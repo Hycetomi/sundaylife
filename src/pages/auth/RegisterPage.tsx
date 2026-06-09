@@ -50,14 +50,26 @@ const RegisterPage = () => {
   const [inviteName, setInviteName] = useState('');
   const [done, setDone] = useState(false);
 
+  const [linkError, setLinkError] = useState<string | null>(null);
+
   useEffect(() => {
-    // Detect Supabase invite token in the URL hash
     const params = new URLSearchParams(window.location.hash.substring(1));
+    const error = params.get('error');
+    const errorDesc = params.get('error_description');
+
+    if (error) {
+      const msg = errorDesc
+        ? decodeURIComponent(errorDesc.replace(/\+/g, ' '))
+        : 'This invite link is invalid or has expired.';
+      setLinkError(msg);
+      return;
+    }
+
     if (params.get('type') === 'invite') {
       setIsInvite(true);
       return;
     }
-    // Not an invite — once auth resolves, gate appropriately
+
     if (!authLoading) {
       if (user) navigate('/dashboard', { replace: true });
       else navigate('/login', { replace: true });
@@ -89,7 +101,35 @@ const RegisterPage = () => {
     setTimeout(() => navigate('/dashboard', { replace: true }), 1800);
   };
 
-  // Show nothing while auth resolves and we haven't confirmed invite status yet
+  if (linkError) {
+    return (
+      <main className="min-h-screen bg-bitter-liquorice flex items-center justify-center px-4 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="relative z-10 w-full max-w-md bg-pink-swirl rounded-3xl p-10 shadow-2xl text-center"
+        >
+          <div className="w-14 h-14 rounded-full bg-hot-red/10 flex items-center justify-center mx-auto mb-5">
+            <Lock size={22} className="text-hot-red" strokeWidth={1.5} />
+          </div>
+          <h1 className="font-cabinet font-black text-3xl uppercase text-bitter-liquorice mb-3">
+            Link Expired
+          </h1>
+          <p className="font-general text-bitter-liquorice/60 leading-relaxed mb-6">
+            {linkError} Please ask your admin to send a new invite.
+          </p>
+          <Link
+            to="/login"
+            className="font-cabinet font-bold text-sm text-bitter-liquorice/50 hover:text-bitter-liquorice transition-colors underline underline-offset-2"
+          >
+            Back to Sign In
+          </Link>
+        </motion.div>
+      </main>
+    );
+  }
+
   if (!isInvite && authLoading) return null;
 
   return (
