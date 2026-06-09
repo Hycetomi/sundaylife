@@ -8,7 +8,6 @@ export const useLenis = () => {
       // Exponential ease-out: starts fast, settles gently
       easing:      (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
-      smoothTouch: false, // leave touch momentum to the OS (already smooth)
     });
 
     let rafId: number;
