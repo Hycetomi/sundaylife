@@ -52,9 +52,23 @@ Deno.serve(async (req) => {
       redirectTo: `${siteUrl}/register`,
     });
 
+    // User already exists — send a password reset email instead (actually delivers the email)
+    if (error?.message?.toLowerCase().includes('already been registered') ||
+        error?.message?.toLowerCase().includes('already registered')) {
+      const supabaseAnon = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      );
+      const { error: resetError } = await supabaseAnon.auth.resetPasswordForEmail(email, {
+        redirectTo: `${siteUrl}/register`,
+      });
+      if (resetError) return json({ error: resetError.message }, 400);
+      return json({ success: true, method: 'recovery' });
+    }
+
     if (error) return json({ error: error.message }, 400);
 
-    return json({ success: true, userId: data.user.id });
+    return json({ success: true, userId: data.user.id, method: 'invite' });
 
   } catch (err) {
     return json({ error: String(err) }, 500);

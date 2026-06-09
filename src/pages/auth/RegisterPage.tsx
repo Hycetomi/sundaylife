@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -47,6 +47,7 @@ const RegisterPage = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [isInvite, setIsInvite] = useState(false);
+  const isInviteRef = useRef(false);
   const [inviteName, setInviteName] = useState('');
   const [done, setDone] = useState(false);
 
@@ -65,16 +66,18 @@ const RegisterPage = () => {
       return;
     }
 
-    if (params.get('type') === 'invite') {
+    // Handle both invite (new user) and recovery (existing user without password)
+    if (params.get('type') === 'invite' || params.get('type') === 'recovery') {
+      isInviteRef.current = true;
       setIsInvite(true);
       return;
     }
 
-    if (!authLoading) {
+    if (!authLoading && !isInviteRef.current) {
       if (user) navigate('/dashboard', { replace: true });
       else navigate('/login', { replace: true });
     }
-  }, [authLoading, user, navigate]);
+  }, [authLoading, user, navigate, isInvite]);
 
   // Populate the display name once auth picks up the invited user's session
   useEffect(() => {
